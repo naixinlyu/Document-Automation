@@ -104,6 +104,14 @@ Sample file included:
 - `demo/screen recording.mp4` or link: <https://drive.google.com/file/d/1GQ7hMrp32zV3OsBp4Af157_3KKiUPDiz/view?usp=sharing>
 
 ---
+## Robustness
+
+- **Minor formatting differences:** Extraction is LLM-based (Gemini) and does not rely on fixed templates, so it can tolerate small layout/label variations across passports and G-28 scans.
+- **Missing data:** If a field cannot be confidently found, the extractor returns `"N/A"` and the form-filler skips that field instead of failing.
+- **Multi-country passports:** The pipeline is designed to work for passports from various countries because it extracts semantic fields (e.g., name, DOB, nationality) rather than country-specific hardcoded positions.
+- **Field-label variation in the web form:** The form-filling logic is best-effort: it fills by stable identifiers where available and skips fields that cannot be matched.
+
+---
 
 ## Notes / Tips
 
