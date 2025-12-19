@@ -122,6 +122,8 @@ Sample file included:
 ├── form_filler.py
 ├── requirements.txt
 ├── Example_G-28.pdf
+├── Chinese_passport_example.jpg
+├── README.md
 ├── static/
 │   └── index.html
 ├── demo/
