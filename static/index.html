@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document Automation Form Filling System</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container { max-width: 900px; margin: 0 auto; }
+        
+        h1 {
+            color: white;
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2rem;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+        
+        .card {
+            background: white;
+            border-radius: 16px;
+            padding: 30px;
+            margin-bottom: 20px;
+            box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+        }
+        
+        .card h2 {
+            color: #333;
+            margin-bottom: 20px;
+            font-size: 1.3rem;
+        }
+        
+        .api-key-section {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        
+        .api-key-section input {
+            flex: 1;
+            padding: 12px 15px;
+            border: 2px solid #ddd;
+            border-radius: 8px;
+            font-size: 1rem;
+        }
+        
+        .api-key-section input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+        
+        .api-key-status {
+            padding: 8px 15px;
+            border-radius: 8px;
+            font-size: 0.9rem;
+            margin-top: 10px;
+        }
+        
+        .api-key-status.set {
+            background: #d4edda;
+            color: #155724;
+        }
+        
+        .api-key-status.not-set {
+            background: #f8d7da;
+            color: #721c24;
+        }
+        
+        .upload-section {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+        }
+        
+        .upload-box {
+            border: 2px dashed #ccc;
+            border-radius: 12px;
+            padding: 30px;
+            text-align: center;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+        
+        .upload-box:hover { border-color: #667eea; background: #f8f9ff; }
+        .upload-box.uploaded { border-color: #4CAF50; background: #f0fff0; }
+        .upload-box.disabled { opacity: 0.5; cursor: not-allowed; }
+        .upload-box h3 { color: #555; margin-bottom: 10px; }
+        .upload-box p { color: #888; font-size: 0.9rem; }
+        .upload-box input[type="file"] { display: none; }
+        .upload-icon { font-size: 48px; margin-bottom: 15px; }
+        
+        .btn {
+            display: inline-block;
+            padding: 12px 30px;
+            font-size: 1rem;
+            font-weight: 600;
+            color: white;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 20px rgba(102,126,234,0.4); }
+        .btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+        .btn-secondary { background: #6c757d; }
+        .btn-small { padding: 10px 20px; font-size: 0.9rem; }
+        
+        .btn-group { display: flex; gap: 15px; justify-content: center; margin-top: 20px; }
+        
+        .data-display {
+            background: #f8f9fa;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+        
+        .data-display h4 { color: #333; margin-bottom: 15px; }
+        
+        .data-item {
+            display: flex;
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .data-item:last-child { border-bottom: none; }
+        .data-key { font-weight: 600; color: #555; width: 180px; flex-shrink: 0; }
+        .data-value { color: #333; word-break: break-all; }
+        
+        .status {
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            text-align: center;
+        }
+        
+        .status.success { background: #d4edda; color: #155724; }
+        .status.error { background: #f8d7da; color: #721c24; }
+        .status.loading { background: #fff3cd; color: #856404; }
+        
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid #f3f3f3;
+            border-top: 3px solid #667eea;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-right: 10px;
+            vertical-align: middle;
+        }
+        
+        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        
+        .instructions {
+            background: #e7f3ff;
+            border-left: 4px solid #2196F3;
+            padding: 15px;
+            border-radius: 0 8px 8px 0;
+            margin-bottom: 20px;
+        }
+        
+        .instructions h4 { color: #1976D2; margin-bottom: 10px; }
+        .instructions ol { margin-left: 20px; color: #555; }
+        .instructions li { margin-bottom: 5px; }
+
+        @media (max-width: 600px) {
+            .upload-section { grid-template-columns: 1fr; }
+            .api-key-section { flex-direction: column; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Document Automation Form Filling System</h1>
+
+        <div class="instructions">
+            <h4>Instructions</h4>
+            <ol>
+                <li>Set the Gemini API Key</li>
+                <li>Upload passport scan or photo</li>
+                <li>Upload G-28 form</li>
+                <li>Click "Fill Form" to auto-complete</li>
+            </ol>
+        </div>
+        
+        <!-- API Key Setup -->
+        <div class="card">
+            <h2>Set API Key</h2>
+            <p style="color: #666; margin-bottom: 15px;">
+                Get Gemini API Key:
+                <a href="https://aistudio.google.com/apikey" target="_blank">
+                    https://aistudio.google.com/apikey
+                </a>
+            </p>
+            <div class="api-key-section">
+                <input type="password" id="apiKeyInput" placeholder="Enter your Gemini API Key">
+                <button class="btn btn-small" onclick="setApiKey()">Set</button>
+            </div>
+            <div id="apiKeyStatus" class="api-key-status not-set">API Key not set</div>
+        </div>
+        
+        <!-- Document Upload -->
+        <div class="card" id="uploadCard">
+            
+            <h2>Upload Documents</h2>
+            <div class="upload-section">
+                <div class="upload-box disabled" id="passportBox">
+                    <div class="upload-icon"></div>
+                    <h3>Passport</h3>
+                    <p>Click to upload passport</p>
+                    <p style="margin-top: 10px; font-size: 0.8rem; color: #999;">
+                        Supports PDF, JPEG, PNG
+                    </p>
+                    <input type="file" id="passportInput" accept=".pdf,.jpg,.jpeg,.png" onchange="uploadPassport(this)">
+                </div>
+                
+                <div class="upload-box disabled" id="g28Box">
+                    <div class="upload-icon"></div>
+                    <h3>G-28 Form</h3>
+                    <p>Click to upload G-28</p>
+                    <p style="margin-top: 10px; font-size: 0.8rem; color: #999;">
+                        Supports PDF, JPEG, PNG
+                    </p>
+                    <input type="file" id="g28Input" accept=".pdf,.jpg,.jpeg,.png" onchange="uploadG28(this)">
+                </div>
+            </div>
+            
+            <div id="status"></div>
+        </div>
+        
+        <!-- Extracted Data -->
+        <div class="card" id="dataCard" style="display: none;">
+            <h2>Extracted Data</h2>
+            
+            <div id="passportData" class="data-display" style="display: none;">
+                <h4>Passport Information</h4>
+                <div id="passportDataContent"></div>
+            </div>
+            
+            <div id="g28Data" class="data-display" style="display: none;">
+                <h4>G-28 Attorney Information</h4>
+                <div id="g28DataContent"></div>
+            </div>
+            
+            <div class="btn-group">
+                <button class="btn" onclick="fillForm()" id="fillBtn" disabled>
+                    Fill Form
+                </button>
+                <button class="btn btn-secondary" onclick="clearAll()">
+                    Clear Data
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let apiKeySet = false;
+        let passportUploaded = false;
+        let g28Uploaded = false;
+
+        // Set API Key
+        async function setApiKey() {
+            const apiKey = document.getElementById('apiKeyInput').value.trim();
+            if (!apiKey) {
+                alert('Please enter API Key');
+                return;
+            }
+            
+            try {
+                const formData = new FormData();
+                formData.append('api_key', apiKey);
+                
+                const response = await fetch('/set-api-key', {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                if (response.ok) {
+                    apiKeySet = true;
+                    document.getElementById('apiKeyStatus').className = 'api-key-status set';
+                    document.getElementById('apiKeyStatus').innerHTML = 'API Key has been set';
+                    document.getElementById('apiKeyInput').value = '';
+                    
+                    enableUpload();
+                } else {
+                    alert('Failed to set API Key');
+                }
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+        
+        function enableUpload() {
+            const passportBox = document.getElementById('passportBox');
+            const g28Box = document.getElementById('g28Box');
+            
+            passportBox.classList.remove('disabled');
+            g28Box.classList.remove('disabled');
+            
+            passportBox.onclick = () => document.getElementById('passportInput').click();
+            g28Box.onclick = () => document.getElementById('g28Input').click();
+        }
+
+        function showStatus(message, type) {
+            const status = document.getElementById('status');
+            status.className = `status ${type}`;
+            if (type === 'loading') {
+                status.innerHTML = `<span class="spinner"></span>${message}`;
+            } else {
+                status.innerHTML = message;
+            }
+        }
+
+        function displayData(data, containerId) {
+            const container = document.getElementById(containerId);
+            container.innerHTML = '';
+            
+            if (data.error) {
+                container.innerHTML =
+                    `<div class="data-item"><span class="data-value" style="color:#dc3545;">Error: ${data.error}</span></div>`;
+                return;
+            }
+            
+            for (const [key, value] of Object.entries(data)) {
+                if (value && value !== 'N/A') {
+                    const item = document.createElement('div');
+                    item.className = 'data-item';
+                    item.innerHTML = `
+                        <span class="data-key">${key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}</span>
+                        <span class="data-value">${value}</span>
+                    `;
+                    container.appendChild(item);
+                }
+            }
+        }
+
+        async function uploadPassport(input) {
+            if (!apiKeySet) { alert('Please set API Key first'); return; }
+            if (input.files.length > 0) await uploadFile(input.files[0], 'passport');
+        }
+
+        async function uploadG28(input) {
+            if (!apiKeySet) { alert('Please set API Key first'); return; }
+            if (input.files.length > 0) await uploadFile(input.files[0], 'g28');
+        }
+
+        async function uploadFile(file, type) {
+            const docName = type === 'passport' ? 'Passport' : 'G-28 Form';
+            showStatus(`Uploading and analyzing ${docName}, please wait...`, 'loading');
+            
+            const formData = new FormData();
+            formData.append('file', file);
+            
+            try {
+                const response = await fetch(`/upload/${type}`, {
+                    method: 'POST',
+                    body: formData
+                });
+                
+                const result = await response.json();
+                
+                if (response.ok) {
+                    const box = document.getElementById(type === 'passport' ? 'passportBox' : 'g28Box');
+                    box.classList.add('uploaded');
+                    box.querySelector('p').textContent = file.name;
+                    
+                    document.getElementById('dataCard').style.display = 'block';
+                    const dataSection = document.getElementById(type === 'passport' ? 'passportData' : 'g28Data');
+                    dataSection.style.display = 'block';
+                    displayData(result.data, type === 'passport' ? 'passportDataContent' : 'g28DataContent');
+                    
+                    if (type === 'passport') passportUploaded = true;
+                    if (type === 'g28') g28Uploaded = true;
+                    
+                    document.getElementById('fillBtn').disabled = !(passportUploaded || g28Uploaded);
+                    showStatus(`${docName} processed successfully`, 'success');
+                } else {
+                    showStatus(`Upload failed: ${result.detail}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+        }
+
+        async function fillForm() {
+            showStatus('Launching browser to fill the form...', 'loading');
+            document.getElementById('fillBtn').disabled = true;
+            
+            try {
+                const response = await fetch('/fill-form', { method: 'POST' });
+                const result = await response.json();
+                
+                if (response.ok) {
+                    showStatus(`Form filling completed. ${result.result.total_filled} fields filled.`, 'success');
+                } else {
+                    showStatus(`Filling failed: ${result.detail}`, 'error');
+                }
+            } catch (error) {
+                showStatus(`Error: ${error.message}`, 'error');
+            }
+            
+            document.getElementById('fillBtn').disabled = false;
+        }
+
+        async function clearAll() {
+            await fetch('/clear', { method: 'POST' });
+            
+            passportUploaded = false;
+            g28Uploaded = false;
+            
+            document.getElementById('passportBox').classList.remove('uploaded');
+            document.getElementById('g28Box').classList.remove('uploaded');
+            document.querySelector('#passportBox p').textContent = 'Click to upload passport';
+            document.querySelector('#g28Box p').textContent = 'Click to upload G-28';
+            
+            document.getElementById('dataCard').style.display = 'none';
+            document.getElementById('passportData').style.display = 'none';
+            document.getElementById('g28Data').style.display = 'none';
+            document.getElementById('fillBtn').disabled = true;
+            document.getElementById('status').innerHTML = '';
+            document.getElementById('status').className = '';
+        }
+    </script>
+</body>
+</html>
