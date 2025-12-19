@@ -101,7 +101,7 @@ Sample file included:
 
 ## Demo (screen recording)
 
-- `demo/screen recording.mp4`
+- `demo/screen recording.mp4` or link: <https://drive.google.com/file/d/1GQ7hMrp32zV3OsBp4Af157_3KKiUPDiz/view?usp=sharing>
 
 ---
 
